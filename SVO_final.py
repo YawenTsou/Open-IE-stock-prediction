@@ -55,7 +55,7 @@ class SVO():
             break
 #             else:
 #                 return 'Sentence can not find SVO.'  
-        print(self._dic)                                
+                              
         # find SVO   
         while self._queue != []:
             self._data = self._queue.pop(0)
@@ -68,11 +68,12 @@ class SVO():
             self.t = self._data.data
 
             # 找子句 & 對等連接詞 & 分詞
-            self.show()
-            self._find_SBAR()
+#             self.show()
+            if self._data.relation != 'appos':
+                self._find_SBAR()
 #             self.show()
 #             self._remove_comma()
-            self.show()
+#             self.show()
             self._data.svo = collections.defaultdict(list)
 
             # Find Subject
@@ -564,7 +565,7 @@ class SVO():
             node = self.t
         if data == '':
             data = self._data
-        synonym = ['which', 'that', 'who', 'whom']
+        synonym = ['which', 'that', 'who', 'whom']                                          
         if data != None and data.relation == 'appos':
             dep, = self._dependency.raw_parse(' '.join(node.flatten()))
         else:
@@ -574,6 +575,7 @@ class SVO():
             for j in range(len(pre)-1, -1, -1):
                 if len([x['deps'] for x in dep.nodes.values() if x['word']==pre[j]]) > 1:
                     dep, = self._dependency.raw_parse(' '.join(node.flatten()))
+
                 candidate = [x['deps'] for x in dep.nodes.values() if x['word']==pre[j]][0]
                 candidate_1 = [x for x in dep.triples() if x[2][0]==pre[j]]
                                                    
@@ -602,6 +604,8 @@ class SVO():
                         for n in self.t.subtrees(lambda n:n[0] == dep.get_by_address(deps['dobj'][0])['word']):
                             obj.append(n[0])
                             return (' '.join(obj), self._find_attrs(n, ' '.join(obj)))
+#                     else:
+#                         return None
                                                    
                 elif 'cop' in [x[1] for x in candidate_1]:
                     tmp = [x for x in candidate_1 if x[1] == 'cop'][0]
@@ -819,7 +823,7 @@ class SVO():
         return attrs
                                                    
                                                    
-    def _find_attrs(self, node, name):   
+    def _find_attrs(self, node, name): 
         attrs = []
         p = node.parent()
         toV = self._toV(node)
@@ -879,7 +883,7 @@ class SVO():
 #                             self._refresh(s)
                             attrs.append(' '.join(s.flatten()))
 
-        elif node.label().startswith('VB'):
+        elif node.label().startswith('VB') or node.label() == 'RP':
             if p.parent():
                 tmp = node
                 for s in p.parent():
@@ -888,7 +892,7 @@ class SVO():
                             attrs.append(' '.join(s.flatten()))
     #                 elif s != p and s.label() in ['MD','RB']:
     #                     attrs.append(s[0])
-                    elif s != p and s.label() == 'PP' and s == tmp.right_sibling():
+                    elif s != p and s.label() == 'PP' and s == tmp.right_sibling():       
                         attrs = self._PP(s, name, attrs)
                         tmp = s
         
@@ -929,7 +933,7 @@ class SVO():
                         sub = []
                         pp = c.parent()
                         for l in pp:
-                            if l.label().startswith('NN') or l.label() in ['PRP','CD', 'DT']:
+                            if l.label().startswith('NN') or l.label() in ['PRP','CD', 'JJ']:
                                 if l[0] not in sub:
                                     sub.append(l[0])
                                     flag = l
